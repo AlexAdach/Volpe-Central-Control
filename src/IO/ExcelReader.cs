@@ -172,6 +172,12 @@ namespace VolpeCCReact.IO
                 
             }
 
+            room.STime_Power_On = DateTime.Now;
+            room.STime_Power_Off = DateTime.Now;
+
+            room.STime_Power_On.AddHours(08);
+            room.STime_Power_Off.AddHours(19);
+
         }
     }
 

@@ -1,9 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using Crestron.SimplSharpPro;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VolpeCCReact.src.AV.Display;
 
 namespace VolpeCCReact.Devices
 {
@@ -16,6 +18,9 @@ namespace VolpeCCReact.Devices
         string DeviceType { get; }
 
         bool PowerState { get; }
+
+        event EventHandler<CrestronDeviceOnlineEventArgs> OnlineStatusChangedHandler;
+
 
         [JsonIgnore]
         string Description { get; set; }

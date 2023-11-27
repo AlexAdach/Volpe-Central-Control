@@ -1,11 +1,11 @@
 ﻿using Crestron.SimplSharpPro;
-using Independentsoft.Json.Parser;
 using System;
 using System.IO;
 using System.Linq;
 using VolpeCCReact.AV;
 using VolpeCCReact.Devices;
 using VolpeCCReact.IO;
+using VolpeCCReact.src.AV.Display;
 using VolpeCCReact.Types;
 
 namespace VolpeCCReact.Services
@@ -131,7 +131,9 @@ namespace VolpeCCReact.Services
         }
 
 
-
+        /// <summary>
+        /// Runs through the deveice database and creates the necessary Crestron Devices.
+        /// </summary>
         private void InitializeDevices()
         {
             foreach(var room in Database.Site.Rooms)
@@ -141,6 +143,13 @@ namespace VolpeCCReact.Services
                     try
                     {
                         room.Devices[i].CrestronDevice = DeviceFactory.Create(room.Devices[i], cs, room);
+                        room.Devices[i].CrestronDevice.OnlineStatusChangedHandler += OnDeviceOnlineStatusChanged;
+
+                        if (room.Devices[i].CrestronDevice is ISerialDevice com)
+                        {
+                            com.SerialTxMessageHandler += DebugSerialTXMessage;
+                            com.SerialRxMessageHandler += DebugSerialRXMessage;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -150,8 +159,7 @@ namespace VolpeCCReact.Services
             }
         }
 
-
-
+        #region Dispose
         /// <summary>
         /// Disposes all the objects in the database
         /// </summary>
@@ -165,6 +173,14 @@ namespace VolpeCCReact.Services
                     {
                         try
                         {
+                            room.Devices[i].CrestronDevice.OnlineStatusChangedHandler -= OnDeviceOnlineStatusChanged;
+
+                            if (room.Devices[i].CrestronDevice is ISerialDevice com)
+                            {
+                                com.SerialTxMessageHandler -= DebugSerialTXMessage;
+                                com.SerialRxMessageHandler -= DebugSerialRXMessage;
+                            }
+
                             room.Devices[i].CrestronDevice.Dispose();
                         }
                         catch (Exception ex)
@@ -182,6 +198,13 @@ namespace VolpeCCReact.Services
 
             base.Dispose(disposing);
         }
+        #endregion Dispose
+
+        /// <summary>
+        /// Returns a room object given an ID.
+        /// </summary>
+        /// <param name="targetId">GUID of room.</param>
+        /// <returns>Room object, otherwise null.</returns>
         public Room GetRoom(string targetId)
         {
             Room targetRoom = Database.Site.Rooms.FirstOrDefault(obj => obj.Guid.ToString() == targetId);
@@ -192,7 +215,11 @@ namespace VolpeCCReact.Services
             }
             return targetRoom;  
         }
-
+        /// <summary>
+        /// Gets the first device in a room (Debugging).
+        /// </summary>
+        /// <param name="number">Room Number</param>
+        /// <returns>Crestron Device in room's device list at index 0</returns>
         public IDevice GetDevicebyRoomNumber(string number)
         {
 
@@ -219,6 +246,27 @@ namespace VolpeCCReact.Services
             }
 
             return null;
+        }
+
+        private void DebugSerialTXMessage(object sender, SerialMessageEventArgs e)
+        {
+            Log($"Room: {e.Room} - Tx: {e.Message}");
+        }
+
+        private void DebugSerialRXMessage(object sender, SerialMessageEventArgs e)
+        {
+            Log($"Room: {e.Room} - Rx: {e.Message}");
+        }
+
+        private void OnDeviceOnlineStatusChanged(object sender, CrestronDeviceOnlineEventArgs e)
+        {
+            string status = (e.IsOnline) ? "Online" : "Offline";
+            Log($"Room: {e.Room} {e.DeviceType} ID: {e.ID.ToString("X2")}({e.ID}), {status}");
+        }
+
+        private void OnSerialMessageEvent(object sender, SerialMessageEventArgs e)
+        {
+            Log($"Message: {e.Message}");
         }
     }
 }

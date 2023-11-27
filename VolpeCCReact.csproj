@@ -153,8 +153,11 @@
   <ItemGroup>
     <Compile Include="src\AV\DeviceFactory.cs" />
     <Compile Include="src\AV\Devices\BaseDevice.cs" />
+    <Compile Include="src\AV\Devices\ISerialDevice.cs" />
     <Compile Include="src\AV\Display\CenCom102Wrapper.cs" />
+    <Compile Include="src\AV\Display\CrestronDeviceOnlineEventArgs.cs" />
     <Compile Include="src\AV\Display\RVCC.cs" />
+    <Compile Include="src\AV\Display\SerialMessageEventArgs.cs" />
     <Compile Include="src\Config\Config.cs" />
     <Compile Include="src\Services\DatabaseService.cs" />
     <Compile Include="src\IO\ExcelReader.cs" />

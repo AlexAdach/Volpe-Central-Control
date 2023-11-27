@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VolpeCCReact.Devices;
+using VolpeCCReact.src.AV.Display;
 
 namespace VolpeCCReact.AV.Devices
 {
@@ -15,7 +16,19 @@ namespace VolpeCCReact.AV.Devices
         private RoomViewConnectedDisplay roomViewConnectedDisplay;
         private bool disposedValue;
 
-        public bool Connected => roomViewConnectedDisplay.OnlineFeedback.BoolValue;
+        private int _onlineStatusDebounce;
+
+        public bool Connected
+        {
+            get
+            {
+                if(_onlineStatusDebounce > 0)
+                {
+                    return true;
+                }
+                else { return false; }
+            }
+        }
 
         public uint Ipid => roomViewConnectedDisplay.ID;
 
@@ -31,9 +44,12 @@ namespace VolpeCCReact.AV.Devices
             set => roomViewConnectedDisplay.Description = value;
         }
 
+        public event EventHandler<CrestronDeviceOnlineEventArgs> OnlineStatusChangedHandler;
+
         public RVCC(uint ipId, CrestronControlSystem cs)
         {
             roomViewConnectedDisplay = new RoomViewConnectedDisplay(ipId, cs);
+            roomViewConnectedDisplay.OnlineStatusChange += OnOnlineStatusChanged;
         }
 
         public void Register()
@@ -49,6 +65,25 @@ namespace VolpeCCReact.AV.Devices
         void IDevice.Power_Off()
         {
             roomViewConnectedDisplay.PowerOff();
+        }
+
+        public void OnOnlineStatusChanged(object sender, OnlineOfflineEventArgs args)
+        {
+            if (args.DeviceOnLine)
+            {
+                OnlineStatusChangedHandler?.Invoke(this, new CrestronDeviceOnlineEventArgs(args.DeviceOnLine, Ipid, Description, DeviceType));
+                _onlineStatusDebounce = 2;
+            }
+            else if(!args.DeviceOnLine && _onlineStatusDebounce > 0)
+            {
+                _onlineStatusDebounce--;
+            }
+            else if(!args.DeviceOnLine && _onlineStatusDebounce <= 0)
+            {
+                OnlineStatusChangedHandler?.Invoke(this, new CrestronDeviceOnlineEventArgs(args.DeviceOnLine, Ipid, Description, DeviceType));
+            }
+
+            
         }
 
         protected virtual void Dispose(bool disposing)
@@ -67,14 +102,6 @@ namespace VolpeCCReact.AV.Devices
                 disposedValue = true;
             }
         }
-
-        // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-/*         ~RVCC()
-         {
-             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-             Dispose(disposing: false);
-         }*/
-
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
