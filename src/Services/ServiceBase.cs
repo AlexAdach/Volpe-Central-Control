@@ -19,6 +19,11 @@ namespace VolpeCCReact.Services
             CrestronInvoke.BeginInvoke(_mediator.Log, new LoggingObject(this, message, LogLevelType.Debug));
         }
 
+        protected void LogBytes(byte[] bytes)
+        {
+            CrestronInvoke.BeginInvoke(_mediator.Log, bytes);
+        }
+
         protected void Error(string message)
         {
             CrestronInvoke.BeginInvoke(_mediator.Log, new LoggingObject(this, message, LogLevelType.Error));
@@ -37,6 +42,10 @@ namespace VolpeCCReact.Services
             {
                 _mediator.Deregister(this);
             }
+        }
+        ~ServiceBase()
+        {
+            Dispose(false);
         }
 
         

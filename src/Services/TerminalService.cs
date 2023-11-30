@@ -19,7 +19,6 @@ namespace VolpeCCReact.Services.Logging
         public void ServerStart()
         {
             _terminalServer = new TCPServer("0.0.0.0", _port, 4096);
-            
             _terminalServer.WaitForConnectionAsync(ClientConnected);
         }
 
@@ -54,30 +53,26 @@ namespace VolpeCCReact.Services.Logging
             }
         }
 
+        private void ToClient(byte[] data)
+        {
+            _terminalServer.SendData(data, data.Length);
+        }
+
         private void ToClient(string message, uint index = 0)
         {
-            byte[] data = Encoding.UTF8.GetBytes(message);
+            byte[] data = Encoding.GetEncoding(28591).GetBytes(message);
             _terminalServer.SendData(data, data.Length);
         }
 
         void ILogger.Log(string message) => ToClient(message);
+        void ILogger.LogBytes(byte[] bytes) => ToClient(bytes);
 
-        //Terminal Commands
+        /// <summary>
+        /// Takes the received message and sends it to it's corrosponding terminal processor. 
+        /// </summary>
+        /// <param name="message"></param>
         private void ParseMessage(string message)
         {
-            //message = message.ToLower();
-            /*            switch (message)
-                        {
-                            case "rooms":
-                                ShowRoomList();
-                                break;
-                            case "configurations":
-                                PrintConfigurations();
-                                break;
-                            default:
-
-                                break;
-                        }*/
             try
             {
                 var response = _terminalCommands.ProcessCommand(message);
@@ -85,12 +80,15 @@ namespace VolpeCCReact.Services.Logging
             }
             catch (Exception ex)
             {
-
                 ToClient($"Error: {ex}");
             }
 
         }
 
+        /// <summary>
+        /// Checks to see if the system Database had been initialized to warn the end user. 
+        /// </summary>
+        /// <returns></returns>
         private bool IsSystemOK()
         {
             var database = _mediator.GetService<DatabaseService>(this);
@@ -104,6 +102,33 @@ namespace VolpeCCReact.Services.Logging
                 return database.DatabaseInitialized;
             }
         }
+
+        #region Dispose
+        public override void Dispose()
+        {
+            Dispose(true);
+            base.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        ~TerminalService()
+        {
+            Dispose(false);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ToClient("Program is shutting Down.");
+                _terminalServer.DisconnectAll();
+                _terminalServer.Stop();
+                base.Dispose(disposing);
+            }
+        }
+        #endregion Dispose
+
+
 
 
     }

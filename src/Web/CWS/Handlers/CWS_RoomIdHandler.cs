@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VolpeCCReact.Services;
+using VolpeCCReact.src.Web.CWS;
 
 namespace VolpeCCReact.Web.CWS.Handlers
 {
@@ -24,8 +25,44 @@ namespace VolpeCCReact.Web.CWS.Handlers
                 context.Response.StatusCode = 200;
 
                 context.Response.Write(json, true);
-
             }
+        }
+
+        protected override void ProcessPost(ref HttpCwsContext context)
+        {
+            try
+            {
+                using (var reader = new Crestron.SimplSharp.CrestronIO.StreamReader(context.Request.InputStream))
+                {
+                    var bodyString = reader.ReadToEnd();
+                    var roomRequest = JsonConvert.DeserializeObject<RoomPostRequest>(bodyString);
+
+                    if(roomRequest != null)
+                    {
+                        if(roomRequest.Startup != String.Empty)
+                        {
+                            Log($"{roomRequest.Startup}");
+                        }
+                        else if(roomRequest.Shutdown != String.Empty)
+                        {
+                            Log($"{roomRequest.Shutdown}");
+                        }
+
+                    }
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Error($"Error parsing put request: {ex.Message}");
+            }
+
+            context.Response.StatusCode = 200;
+
+
+
         }
     }
 }

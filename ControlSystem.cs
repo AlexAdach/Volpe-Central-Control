@@ -4,6 +4,7 @@ using Crestron.SimplSharpPro.CrestronThread;        	// For Threading
 using System;
 using VolpeCCReact.Services;
 using VolpeCCReact.Services.Logging;
+using VolpeCCReact.src.Services;
 using VolpeCCReact.Web.CWS;
 
 namespace VolpeCCReact
@@ -12,14 +13,16 @@ namespace VolpeCCReact
     /// <summary>
     /// Things I could have done better:
     /// -My service mediator idea was solid. But based on other source codes I've seen it might make sense to put checks in to prevent multiple instances of a service to be registered.
-    /// 
+    /// -Think about disposal a bit more from the start. 
+    /// -Make a bit more of a defined Composition Root. 
     /// 
     /// </summary>
     public class ControlSystem : CrestronControlSystem
     {
-        private TerminalService terminal;
-        private DatabaseService database;
-        private CWSServer CWSServer;
+        private TerminalService service_Terminal;
+        private DatabaseService service_Database;
+        private CWSService service_CWS;
+        private TimerService service_Timer;
 
         public ControlSystem()
             : base()
@@ -28,9 +31,10 @@ namespace VolpeCCReact
             {
                 Thread.MaxNumberOfUserThreads = 20;
 
-                terminal = new TerminalService();
-                database = new DatabaseService(this);
-                CWSServer = new CWSServer();
+                service_Terminal = new TerminalService();
+                service_Database = new DatabaseService(this);
+                service_CWS = new CWSService();
+
 
                 //Subscribe to the controller events (System, Program, and Ethernet)
                 CrestronEnvironment.SystemEventHandler += new SystemEventHandler(_ControllerSystemEventHandler);
@@ -60,13 +64,13 @@ namespace VolpeCCReact
         {
             try
             {
-                terminal.ServerStart();
-                database.Initialize();
+                service_Terminal.ServerStart();
+                service_Database.Initialize();
                 //CrestronInvoke.BeginInvoke(database.Initialize);
 
-                CrestronInvoke.BeginInvoke(CWSServer.Initialize);
+                CrestronInvoke.BeginInvoke(service_CWS.Initialize);
 
-
+                service_Timer = new TimerService();
 
             }
             catch (Exception e)
@@ -122,13 +126,10 @@ namespace VolpeCCReact
                     //The program has been resumed. Resume all the user threads/timers as needed.
                     break;
                 case (eProgramStatusEventType.Stopping):
-                    database.Dispose();
-                    CWSServer.Dispose();
-                    //The program has been stopped.
-                    //Close all threads. 
-                    //Shutdown all Client/Servers in the system.
-                    //General cleanup.
-                    //Unsubscribe to all System Monitor events
+                    service_Timer.Dispose();
+                    service_Terminal.Dispose();
+                    service_CWS.Dispose();
+                    service_Database.Dispose();
                     break;
             }
 

@@ -13,31 +13,31 @@ using VolpeCCReact.Web.CWS.Handlers;
 
 namespace VolpeCCReact.Web.CWS
 {
-    internal class CWSServer : ServiceBase
+    internal class CWSService : ServiceBase
     {
         private HttpCwsServer api;
         //private IHttpCwsHandler routeHandler;
 
-        internal CWSServer()
+        internal CWSService()
         {
-
 
         }
 
         public void Initialize(object obj = null)
         {
-            api = new HttpCwsServer("/API");
-            //api.HttpRequestHandler = new CWS_APIHandler();
+            api = new HttpCwsServer("/CentralControl");
+            api.HttpRequestHandler = new CWS_FrontendHandler();
 
-            var rooms = new HttpCwsRoute("rooms");
+
+            var rooms = new HttpCwsRoute("api/rooms");
             rooms.RouteHandler = new CWS_RoomsHandler();
             api.AddRoute(rooms);
 
-            var roomId = new HttpCwsRoute("rooms/{ID}");
+            var roomId = new HttpCwsRoute("api/rooms/{ID}");
             roomId.RouteHandler = new CWS_RoomIdHandler();
             api.AddRoute(roomId);
 
-            var device = new HttpCwsRoute("device/{ID}/{POWER}");
+            var device = new HttpCwsRoute("api/device/{ID}/{POWER}");
             device.RouteHandler = new CWS_DeviceHandler();
             api.AddRoute(device);
 
@@ -50,15 +50,31 @@ namespace VolpeCCReact.Web.CWS
             Log($"{args.Context.Request.HttpMethod} request received from client");
         }
 
+        #region Dispose
+        public override void Dispose()
+        {
+            Dispose(true);
+            base.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
         protected override void Dispose(bool disposing)
         {
-            if (api != null)
+            if (disposing)
             {
-                api.Unregister();
-                api.Dispose();
+                if (api != null)
+                {
+                    api.Unregister();
+                    api.Dispose();
+                }
             }
-            base.Dispose(disposing);
-
         }
+
+        ~CWSService()
+        {
+            Dispose(false);
+        }
+        #endregion Dispose
+
     }
 }

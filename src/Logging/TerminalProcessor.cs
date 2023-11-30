@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
+using VolpeCCReact.src.Services;
 using VolpeCCReact.Web;
 
 namespace VolpeCCReact.Services
@@ -201,6 +202,8 @@ namespace VolpeCCReact.Services
             {
                 case "list":
                     return ListServices();
+                case "timerlog":
+                    return DisplayTimerLog();
                 case "":
                     return Help;
                 default:
@@ -219,6 +222,23 @@ namespace VolpeCCReact.Services
             }
 
             return stringBuilder.ToString();
+        }
+        
+        private string DisplayTimerLog()
+        {
+            var timerserver = ServiceMediator.Instance.GetService<TimerService>(this);
+
+            if (timerserver == null)
+            {
+                return "TimerServer is null.";
+            }
+                foreach (var log in timerserver.logEntries)
+                {
+                    stringBuilder.AppendLine(log);
+                }
+            
+            return stringBuilder.ToString();
+            
         }
     }
 
@@ -243,12 +263,36 @@ namespace VolpeCCReact.Services
                     return PowerOn();
                 case "off":
                     return PowerOff();
+                case "timers":
+                    return ShowTimers();
                 case "":
                     return Help;
                 default:
                     return TypePrefix + NotFound;
 
             }
+        }
+
+        private string ShowTimers()
+        {
+            var database = _mediator.GetService<DatabaseService>(this);
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach(var room in database.Database.Site.Rooms)
+            {
+                //var start = room.STime_Power_On.TimeOfDay.ToString();
+                //var stop  = room.STime_Power_Off.TimeOfDay.ToString();
+
+                var start = room.StartupTime.ToString();
+                var stop = room.ShutdownTime.ToString();
+
+                sb.Append(room.RoomName).Append(" Start  - ").Append(start).AppendLine();
+                sb.Append(room.RoomName).Append(" Stop  - ").Append(stop).AppendLine();
+
+            }
+
+            return sb.ToString();
         }
 
         private string PowerOn()

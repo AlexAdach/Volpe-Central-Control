@@ -29,5 +29,7 @@ namespace VolpeCCReact.Web.CWS.Handlers
                 //throw new Exception("Error retrieving room list.");
             }
         }
+
+
     }
 }

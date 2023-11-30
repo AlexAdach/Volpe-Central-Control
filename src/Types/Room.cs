@@ -25,14 +25,9 @@ namespace VolpeCCReact.Types
 
         public bool RoomTimerActive { get; set; }
 
-        //public string Time_Power_On => STime_Power_On.ToString("h");
+        public TimeSpan StartupTime { get; set; }
 
-        //public string Time_Power_Off => STime_Power_Off.ToString("h");
-
-        //[JsonIgnore]
-        public DateTime STime_Power_On { get; set; }
-        //[JsonIgnore]
-        public DateTime STime_Power_Off { get; set; }
+        public TimeSpan ShutdownTime { get; set; }
 
         public List<Device> Devices { get; set; }
 

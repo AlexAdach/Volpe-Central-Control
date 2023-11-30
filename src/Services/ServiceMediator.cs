@@ -72,7 +72,20 @@ namespace VolpeCCReact.Services
                     _logsList.Add(logmessage.Message);
 
             }
+            else if(message.GetType() == typeof(byte[]))
+            {
+                foreach (var service in services)
+                {
+                    if (service is ILogger logger)
+                    {
+                        logger.LogBytes((byte[])message);
+                    }
+                }
+            }
+
         }
+
+        
     }
 
 }

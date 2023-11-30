@@ -14,21 +14,10 @@ namespace VolpeCCReact.AV.Devices
     public class RVCC : IDevice, IDisposable
     {
         private RoomViewConnectedDisplay roomViewConnectedDisplay;
-        private bool disposedValue;
 
         private int _onlineStatusDebounce;
 
-        public bool Connected
-        {
-            get
-            {
-                if(_onlineStatusDebounce > 0)
-                {
-                    return true;
-                }
-                else { return false; }
-            }
-        }
+        public bool Connected => roomViewConnectedDisplay.IsOnline;
 
         public uint Ipid => roomViewConnectedDisplay.ID;
 
@@ -88,25 +77,23 @@ namespace VolpeCCReact.AV.Devices
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
-            {
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects)
                     roomViewConnectedDisplay.UnRegister();
                     roomViewConnectedDisplay.Dispose();
                 }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                disposedValue = true;
-            }
+            
         }
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
+            Dispose(true);
             GC.SuppressFinalize(this);
+        }
+        ~RVCC()
+        {
+            Dispose(false);
         }
     }
 }

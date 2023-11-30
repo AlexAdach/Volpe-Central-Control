@@ -9,5 +9,6 @@ namespace VolpeCCReact.Logging
     internal interface ILogger
     {
         void Log(string message);
+        void LogBytes(byte[] bytes);
     }
 }

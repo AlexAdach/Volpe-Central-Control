@@ -21,12 +21,6 @@ namespace VolpeCCReact.Logging
             _sender = sender;
             _value = value;
             _level = level;
-        
-        }
-
-        
-        
-           
-        
+        }        
     }
 }

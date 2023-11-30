@@ -5,6 +5,8 @@ using System.Linq;
 using VolpeCCReact.AV;
 using VolpeCCReact.Devices;
 using VolpeCCReact.IO;
+using VolpeCCReact.Logging;
+using VolpeCCReact.Services.Logging;
 using VolpeCCReact.src.AV.Display;
 using VolpeCCReact.Types;
 
@@ -26,13 +28,6 @@ namespace VolpeCCReact.Services
             this.cs = cs;
         }
 
-
-        /// <summary>
-        /// Same method with parameters in case it needs to be called with Crestron invoke. 
-        /// </summary>
-        /// <param name="obj"></param>
-        public void Initialize(object obj = null) => Initialize();
-        
         /// <summary>
         /// Database Initialization called on program start.
         /// </summary>
@@ -74,6 +69,13 @@ namespace VolpeCCReact.Services
             }
         }
 
+        /// <summary>
+        /// Same method with parameters in case it needs to be called with Crestron invoke. 
+        /// </summary>
+        /// <param name="obj"></param>
+        public void Initialize(object obj = null) => Initialize();
+
+        #region FileIO
         private void Excel_GenerateDatabase()
         {
             try
@@ -129,7 +131,7 @@ namespace VolpeCCReact.Services
             }
 
         }
-
+        #endregion FileIO
 
         /// <summary>
         /// Runs through the deveice database and creates the necessary Crestron Devices.
@@ -159,7 +161,6 @@ namespace VolpeCCReact.Services
             }
         }
 
-        #region Dispose
         /// <summary>
         /// Disposes all the objects in the database
         /// </summary>
@@ -192,12 +193,30 @@ namespace VolpeCCReact.Services
             }
         }
 
+        #region Dispose
+
+
         protected override void Dispose(bool disposing)
         {
-            DisposeDevices();
-
-            base.Dispose(disposing);
+            if(disposing)
+            {
+                DisposeDevices();
+            }
         }
+
+        public override void Dispose()
+        {
+            
+            Dispose(true);
+            base.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        ~DatabaseService()
+        {
+            Dispose(false);
+        }
+
         #endregion Dispose
 
         /// <summary>
@@ -215,6 +234,7 @@ namespace VolpeCCReact.Services
             }
             return targetRoom;  
         }
+
         /// <summary>
         /// Gets the first device in a room (Debugging).
         /// </summary>
@@ -228,6 +248,7 @@ namespace VolpeCCReact.Services
             return targetRoom.Devices[0].CrestronDevice;
 
         }
+
         /// <summary>
         /// Searches the database for a device object based on ID.
         /// </summary>

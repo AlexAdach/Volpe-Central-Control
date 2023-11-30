@@ -10,6 +10,7 @@ namespace VolpeCCReact.Logging
     {
         Debug,
         Error,
-        Exception
+        Exception,
+        Serial,
     }
 }
